@@ -1,14 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-// Definition for singly-linked list.
-struct ListNode {
-    int val;
-    struct ListNode *next;
-};
 
 struct ListNode* mergeTwoLists(struct ListNode* list1, struct ListNode* list2) {
-    // Create a temporary dummy node on the stack to hold the head pointer
+    // Create a temporary dummy node on the stack
     struct ListNode dummy;
     struct ListNode *current = &dummy;
     dummy.next = NULL;
