@@ -1,39 +1,43 @@
 #include <limits.h>
+#include <stdlib.h>
 
 int divide(int dividend, int divisor) {
-    // Handle overflow condition specified in the constraints
+    // Handle the specific overflow corner case
     if (dividend == INT_MIN && divisor == -1) {
         return INT_MAX;
     }
     
     // Determine the sign of the final quotient
-    // sign will be 1 if the signs match, or -1 if they differ
     int sign = ((dividend > 0) == (divisor > 0)) ? 1 : -1;
     
-    // Convert both integers to negative values to prevent INT_MIN overflow
-    long long absDividend = (dividend > 0) ? -dividend : dividend;
-    long long absDivisor = (divisor > 0) ? -divisor : divisor;
+    // Convert to positive values using 64-bit unsigned/long long to avoid overflows
+    long long absDividend = llabs((long long)dividend);
+    long long absDivisor = llabs((long long)divisor);
     
-    int quotient = 0;
+    long long quotient = 0;
     
-    // Perform exponential subtraction using bitwise shifting
-    while (absDividend <= absDivisor) {
+    // Exponential subtraction using bitwise shifting on positive numbers
+    while (absDividend >= absDivisor) {
         long long tempDivisor = absDivisor;
-        int multiple = 1;
+        long long multiple = 1;
         
-        // Double the divisor until doubling it makes it smaller than the remaining dividend
-        // (Remember we are working with negative numbers, so smaller means more negative)
-        while (tempDivisor >= (INT_MIN >> 1) && absDividend <= (tempDivisor << 1)) {
+        // Double the divisor safely using left shifts on positive values
+        while (absDividend >= (tempDivisor << 1)) {
             tempDivisor <<= 1;
             multiple <<= 1;
         }
         
-        // Subtract the largest power-of-two multiple found
+        // Subtract the largest found power-of-two multiple
         absDividend -= tempDivisor;
-        // Collect the count of divisors removed
         quotient += multiple;
     }
     
-    // Apply the correct sign to the result
-    return (sign == 1) ? quotient : -quotient;
+    // Apply the sign to the final output
+    long long finalResult = (sign == 1) ? quotient : -quotient;
+    
+    // Boundary check before returning as a 32-bit signed int
+    if (finalResult > INT_MAX) return INT_MAX;
+    if (finalResult < INT_MIN) return INT_MIN;
+    
+    return (int)finalResult;
 }
