@@ -1,0 +1,144 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// A simple Hash Map Node to count word frequencies
+struct HashNode {
+    char* word;
+    int count;
+    struct HashNode* next;
+};
+
+#define HASH_SIZE 1009
+
+// Hash function for strings
+unsigned int hash(const char* str) {
+    unsigned int h = 0;
+    while (*str) {
+        h = h * 31 + *str++;
+    }
+    return h % HASH_SIZE;
+};
+
+// Helper function to insert/increment word count in the hash map
+void insertWord(struct HashNode** table, const char* word, int val) {
+    unsigned int idx = hash(word);
+    struct HashNode* curr = table[idx];
+    while (curr != NULL) {
+        if (strcmp(curr->word, word) == 0) {
+            curr->count += val;
+            return;
+        }
+        curr = curr->next;
+    }
+    struct HashNode* node = (struct HashNode*)malloc(sizeof(struct HashNode));
+    node->word = strdup(word);
+    node->count = val;
+    node->next = table[idx];
+    table[idx] = node;
+}
+
+// Helper function to find a word's count in the hash map
+int findWordCount(struct HashNode** table, const char* word) {
+    unsigned int idx = hash(word);
+    struct HashNode* curr = table[idx];
+    while (curr != NULL) {
+        if (strcmp(curr->word, word) == 0) {
+            return curr->count;
+        }
+        curr = curr->next;
+    }
+    return 0;
+}
+
+// Helper function to clear hash map memory
+void freeTable(struct HashNode** table) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        struct HashNode* curr = table[i];
+        while (curr != NULL) {
+            struct HashNode* tmp = curr;
+            curr = curr->next;
+            free(tmp->word);
+            free(tmp);
+        }
+        table[i] = NULL;
+    }
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* findSubstring(char* s, char** words, int wordsSize, int* returnSize) {
+    *returnSize = 0;
+    if (s == NULL || wordsSize == 0 || s[0] == '\0') return NULL;
+
+    int s_len = strlen(s);
+    int word_len = strlen(words[0]);
+    int total_words = wordsSize;
+    int window_size = total_words * word_len;
+
+    if (s_len < window_size) return NULL;
+
+    // Allocate space for results
+    int* result = (int*)malloc(s_len * sizeof(int));
+
+    // Build the master word frequency table
+    struct HashNode* word_counts[HASH_SIZE] = {NULL};
+    for (int i = 0; i < total_words; i++) {
+        insertWord(word_counts, words[i], 1);
+    }
+
+    // Temporary buffer to copy substrings
+    char* sub_word = (char*)malloc((word_len + 1) * sizeof(char));
+
+    // Run the sliding window with different starting offsets
+    for (int i = 0; i < word_len; i++) {
+        int left = i;
+        int right = i;
+        int count = 0;
+        struct HashNode* current_counts[HASH_SIZE] = {NULL};
+
+        while (right + word_len <= s_len) {
+            // Extract the word at the right pointer
+            strncpy(sub_word, s + right, word_len);
+            sub_word[word_len] = '\0';
+            right += word_len;
+
+            int target_count = findWordCount(word_counts, sub_word);
+            if (target_count > 0) {
+                insertWord(current_counts, sub_word, 1);
+                count++;
+
+                // If we have more occurrences of 'sub_word' than needed, shrink left
+                while (findWordCount(current_counts, sub_word) > target_count) {
+                    char* left_word = (char*)malloc((word_len + 1) * sizeof(char));
+                    strncpy(left_word, s + left, word_len);
+                    left_word[word_len] = '\0';
+                    
+                    insertWord(current_counts, left_word, -1);
+                    count--;
+                    left += word_len;
+                    free(left_word);
+                }
+
+                // If window size matches our total expected words, we found a match
+                if (count == total_words) {
+                    result[*returnSize] = left;
+                    (*returnSize)++;
+                }
+            } else {
+                // Not a valid word, reset the window entirely
+                freeTable(current_counts);
+                count = 0;
+                left = right;
+            }
+        }
+        freeTable(current_counts);
+    }
+
+    // Clean up
+    free(sub_word);
+    freeTable(word_counts);
+
+    return result;
+}
