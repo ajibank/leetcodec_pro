@@ -1,0 +1,39 @@
+#include <limits.h>
+
+int divide(int dividend, int divisor) {
+    // Handle overflow condition specified in the constraints
+    if (dividend == INT_MIN && divisor == -1) {
+        return INT_MAX;
+    }
+    
+    // Determine the sign of the final quotient
+    // sign will be 1 if the signs match, or -1 if they differ
+    int sign = ((dividend > 0) == (divisor > 0)) ? 1 : -1;
+    
+    // Convert both integers to negative values to prevent INT_MIN overflow
+    long long absDividend = (dividend > 0) ? -dividend : dividend;
+    long long absDivisor = (divisor > 0) ? -divisor : divisor;
+    
+    int quotient = 0;
+    
+    // Perform exponential subtraction using bitwise shifting
+    while (absDividend <= absDivisor) {
+        long long tempDivisor = absDivisor;
+        int multiple = 1;
+        
+        // Double the divisor until doubling it makes it smaller than the remaining dividend
+        // (Remember we are working with negative numbers, so smaller means more negative)
+        while (tempDivisor >= (INT_MIN >> 1) && absDividend <= (tempDivisor << 1)) {
+            tempDivisor <<= 1;
+            multiple <<= 1;
+        }
+        
+        // Subtract the largest power-of-two multiple found
+        absDividend -= tempDivisor;
+        // Collect the count of divisors removed
+        quotient += multiple;
+    }
+    
+    // Apply the correct sign to the result
+    return (sign == 1) ? quotient : -quotient;
+}
