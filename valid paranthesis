@@ -1,0 +1,55 @@
+#include <string.h>
+
+// Helper macro to find the maximum of two numbers
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+int longestValidParentheses(char* s) {
+    int n = strlen(s);
+    if (n == 0) return 0;
+    
+    int left = 0, right = 0, max_len = 0;
+    
+    // Pass 1: Scan from Left to Right
+    for (int i = 0; i < n; i++) {
+        if (s[i] == '(') {
+            left++;
+        } else {
+            right++;
+        }
+        
+        // When counts match, we have a perfectly balanced valid substring
+        if (left == right) {
+            max_len = MAX(max_len, 2 * right);
+        } 
+        // If closing tags exceed opening tags, this window is permanently broken
+        else if (right > left) {
+            left = 0;
+            right = 0;
+        }
+    }
+    
+    // Reset trackers for the second pass
+    left = 0;
+    right = 0;
+    
+    // Pass 2: Scan from Right to Left (handles extra unclosed '(' scenarios like "(()")
+    for (int i = n - 1; i >= 0; i--) {
+        if (s[i] == '(') {
+            left++;
+        } else {
+            right++;
+        }
+        
+        // When counts match, calculate the substring length
+        if (left == right) {
+            max_len = MAX(max_len, 2 * left);
+        } 
+        // If opening tags exceed closing tags, this window is broken
+        else if (left > right) {
+            left = 0;
+            right = 0;
+        }
+    }
+    
+    return max_len;
+}
