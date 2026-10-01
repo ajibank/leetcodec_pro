@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void backtrack(int n, int open_count, int close_count, char* current_str, int index, char** result, int* returnSize) {
+    // Base case: if the current string reaches the max length (2 * n)
+    if (index == 2 * n) {
+        current_str[index] = '\0'; // Null-terminate the string
+        result[*returnSize] = strdup(current_str); // Copy the string into our result array
+        (*returnSize)++;
+        return;
+    }
+    
+    // If we can still add an opening parenthesis
+    if (open_count < n) {
+        current_str[index] = '(';
+        backtrack(n, open_count + 1, close_count, current_str, index + 1, result, returnSize);
+    }
+    
+    // If we can add a closing parenthesis
+    if (close_count < open_count) {
+        current_str[index] = ')';
+        backtrack(n, open_count, close_count + 1, current_str, index + 1, result, returnSize);
+    }
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+char** generateParenthesis(int n, int* returnSize) {
+    // For n = 8, the maximum number of combinations is the 8th Catalan number = 1430.
+    // We allocate an array of 2000 pointers to be safely within boundaries.
+    char** result = (char**)malloc(2000 * sizeof(char*));
+    *returnSize = 0;
+    
+    // Allocate a buffer on the stack for building the string (size is 2*n + 1 for '\0')
+    char* current_str = (char*)malloc((2 * n + 1) * sizeof(char));
+    
+    // Start the backtracking process
+    backtrack(n, 0, 0, current_str, 0, result, returnSize);
+    
+    // Free the temporary string builder buffer
+    free(current_str);
+    
+    return result;
+}
