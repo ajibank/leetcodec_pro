@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Helper function to reverse a segment of the string array
+void reverse(char **arr, int start, int end) {
+    while (start < end) {
+        char *temp = arr[start];
+        arr[start] = arr[end];
+        arr[end] = temp;
+        start++;
+        end--;
+    }
+}
+
+int next_permutation(int n, char **arr) {
+    // Step 1: Find the largest index i such that arr[i] < arr[i+1]
+    int i = n - 2;
+    while (i >= 0 && strcmp(arr[i], arr[i + 1]) >= 0) {
+        i--;
+    }
+    
+    // If no such index exists, we are at the last permutation
+    if (i < 0) {
+        return 0;
+    }
+    
+    // Step 2: Find the largest index j > i such that arr[i] < arr[j]
+    int j = n - 1;
+    while (strcmp(arr[i], arr[j]) >= 0) {
+        j--;
+    }
+    
+    // Step 3: Swap elements at index i and j
+    char *temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+    
+    // Step 4: Reverse the sub-array from i + 1 to the end
+    reverse(arr, i + 1, n - 1);
+    
+    return 1;
+}
+
+int main()
+{
+	char **s;
+	int n;
+	if (scanf("%d", &n) != 1) return 1;
+	s = malloc(n * sizeof(char*));
+	for (int i = 0; i < n; i++)
+	{
+		s[i] = malloc(11 * sizeof(char));
+		scanf("%s", s[i]);
+	}
+	do
+	{
+		for (int i = 0; i < n; i++)
+			printf("%s%c", s[i], (i == n - 1) ? '\n' : ' ');
+	} while (next_permutation(n, s));
+	for (int i = 0; i < n; i++)
+		free(s[i]);
+	free(s);
+	return 0;
+}
